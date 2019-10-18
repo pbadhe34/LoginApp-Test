@@ -1,0 +1,66 @@
+<project name="Cucumber-web-test" basedir="." default="runtest">    
+     
+    <property name="jars" value="Cucumber-Lib"/>	
+	<property name="selenium" value="Selenium-Lib"/>     
+	
+        <target name="set-classpath">
+        <path id="classpath">
+            <fileset dir="${jars}">
+                <include name="*.jar"/>
+            </fileset>
+        	<fileset dir="${selenium}">
+        	                <include name="*.jar"/>
+        	            </fileset>
+            <pathelement location="src/stepDefinition"/>
+            <pathelement location="bin"/>
+            <pathelement location="Chrome-Driver"/>
+            <pathelement location="feature"/>
+        </path>
+    </target>
+
+    <target name="compile" depends="clean,set-classpath">        
+        <javac srcdir="src/stepDefinition" compiler="modern" destdir="bin" classpathref="classpath" includeantruntime="true"/>
+    </target>
+
+    <target name="compile-test" depends="compile,set-classpath">         
+        <javac srcdir="src/test" compiler="modern"  destdir="bin" classpathref="classpath" includeantruntime="false"/>
+    </target>
+
+    <target name="runtest" depends="compile">
+        <mkdir dir="reports/cucumber-junit-report"/>
+        <java classname="cucumber.api.cli.Main" fork="true" failonerror="false" resultproperty="cucumber.exitstatus">
+            <classpath refid="classpath"/>
+            <arg value="--plugin"/>
+            <arg value="junit:reports/cucumber-junit-report.xml"/>
+            <arg value="--plugin"/>
+            <arg value="pretty"/>
+            <arg value="--plugin"/>
+            <arg value="html:reports/cucumber-html-report"/>
+            <arg value="--glue"/>
+            <arg value="stepDefinition"/>
+            <arg value="feature"/>
+        </java>
+
+        <junitreport todir="reports/cucumber-junit-report">
+            <fileset dir="reports">
+                <include name="cucumber-junit-report.xml"/>
+            </fileset>
+            <report format="frames" todir="reports/cucumber-junit-report"/>
+        </junitreport>
+
+        <fail message="Cucumber failed">
+            <condition>
+                <not>
+                    <equals arg1="${cucumber.exitstatus}" arg2="0"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="clean">
+    	<delete dir="reports"/>
+        <delete dir="bin"/>
+    	<mkdir dir="bin"/>
+    </target>
+    
+</project>
